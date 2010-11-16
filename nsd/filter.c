@@ -107,16 +107,16 @@ Ns_RegisterFilter(char *server, char *method, char *url,
 
 /*
  *----------------------------------------------------------------------
- * Ns_RegisterFilter --
  *
- *      Register a filter function to handle a method/URL combination.
+ * Ns_FilterList --
+ *
+ *      Enumerate all registered filters for a server.
  *
  * Results:
- *      Returns a pointer to an opaque object that contains the filter
- *	information.
+ *	None.
  *
  * Side effects:
- *      None.
+ *      Tcl list of filters in dstring.
  *
  *----------------------------------------------------------------------
  */
