@@ -161,6 +161,8 @@ static void  TrieDestroy(Trie *triePtr);
 static int   TrieBranchTrunc(Trie *triePtr, char *seq, int id);
 static void *TrieFind(Trie *triePtr, char *seq, int id, int *depthPtr);
 static void *TrieFindExact(Trie *triePtr, char *seq, int id, int flags);
+static int   TrieWalk(Trie *triePtr, int id,
+       		      int (*callback) (const void *, void *), void *userdata);
 static void *TrieDelete(Trie *triePtr, char *seq, int id, int flags);
 
 /*
@@ -186,6 +188,8 @@ static void JunctionBranchTrunc(Junction *juncPtr, char *seq, int id);
 static void *JunctionFind(Junction *juncPtr, char *seq, int id, int fast);
 static void *JunctionFindExact(Junction *juncPtr, char *seq, int id, int flags,
 			       int fast);
+static int   JunctionWalk(Junction *juncPtr, int id,
+       			  int (*callback) (const void *, void *), void *userdata);
 static void *JunctionDelete(Junction *juncPtr, char *seq, int id, int flags);
 
 /*
@@ -496,7 +500,6 @@ Ns_ServerSpecificGet(char *handle, int id)
     return Ns_UrlSpecificGet(handle, NULL, NULL, id);
 }
 
-
 
 /*
  *----------------------------------------------------------------------
@@ -518,6 +521,35 @@ void *
 Ns_ServerSpecificDestroy(char *handle, int id, int flags)
 {
     return Ns_UrlSpecificDestroy(handle, NULL, NULL, id, flags);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Ns_TrieWalk --
+ *
+ *	Walk a url space trie.
+ *
+ * Results:
+ *	NS_OK, or callback return value if not NS_OK.
+ *
+ * Side effects:
+ *	Depends on callback implementation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Ns_TrieWalk(int id, int (*callback) (const void *, void *), void *userdata)
+{
+    int         result;
+
+    Ns_MutexLock(&lock);
+    result = JunctionWalk(&urlspace, id, callback, userdata);
+    Ns_MutexUnlock(&lock);
+
+    return result;
 }
 
 
@@ -1169,6 +1201,80 @@ TrieFindExact(Trie *triePtr, char *seq, int id, int flags)
 /*
  *----------------------------------------------------------------------
  *
+ * TrieWalk --
+ *
+ *	Walk a trie, invoking a callback on each node.
+ *
+ * Results:
+ *	NS_OK, or callback return value if not NS_OK.
+ *
+ * Side effects:
+ *	Depends on callback implementation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TrieWalk(Trie *triePtr, int id, int (*callback) (const void *, void *), void *userdata)
+{
+    int   i, l;
+    int   result = 0;
+
+    if (triePtr->indexnode != NULL) {
+	Node *nodePtr;
+
+	/*
+	 * We've reached a trie with an indexnode, which means that our
+	 * data may be here. (If node is null that means that there
+	 * is data at this branch, but not with this particular ID).
+	 */
+
+	nodePtr = Ns_IndexFind(triePtr->indexnode, (void *) id);
+
+        if (nodePtr != NULL) {
+            if (nodePtr->dataNoInherit != NULL) {
+		result = callback((const void *) nodePtr->dataNoInherit,
+			userdata);
+            } else {
+		result = callback((const void *) nodePtr->dataInherit,
+		       	userdata);
+            }
+        }
+
+
+	/*
+	 * Callback didn't return NS_OK, so we short circuit and stop.
+	 */
+
+	if (result != NS_OK) {
+	    return result;
+	}
+    }
+
+    l = Ns_IndexCount(&triePtr->branches);
+
+    for (i = 0; i < l; i++) {
+	Branch *branchPtr = Ns_IndexEl(&triePtr->branches, i);
+
+	if (branchPtr != NULL) {
+	    result = TrieWalk(&branchPtr->node, id, callback, userdata);
+
+	    /*
+	     * Callback didn't return NS_OK, so we short circuit and stop.
+	     */
+
+	    if (result != NS_OK) {
+		return result;
+	    }
+	}
+    }
+    
+    return NS_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TrieDelete --
  *
  *	Delete a url, defined by a sequence, from a trie.
@@ -1785,6 +1891,70 @@ JunctionFindExact(Junction *juncPtr, char *seq, int id, int flags, int fast)
   done:
     
     return data;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * JunctionWalk --
+ *
+ *	Walk an entire junction, invoking a callback on each node.
+ *
+ * Results:
+ *	NS_OK, or callback return value if not NS_OK.
+ *
+ * Side effects:
+ *	Depends on callback implementation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+JunctionWalk(Junction *juncPtr, int id, int (*callback) (const void *, void *), void *userdata)
+{
+    int   i, l;
+    int   result;
+
+    /*
+     * Check filters from most restrictive to least restrictive
+     */
+    
+#ifndef __URLSPACE_OPTIMIZE__
+    l = Ns_IndexCount(&juncPtr->byuse);
+#else
+    l = Ns_IndexCount(&juncPtr->byname);
+#endif
+
+    /* 
+     * For __URLSPACE_OPTIMIZE__
+     * Basically if we use the optimize, let's reverse the order
+     * by which we search because the byname is in "almost" exact
+     * reverse lexicographical order.
+     *
+     * Loop over all the channels in the index.
+     */
+    
+#ifndef __URLSPACE_OPTIMIZE__
+    for (i = 0; i < l; i++) {
+        Channel *channelPtr = Ns_IndexEl(&juncPtr->byuse, i);
+#else
+    for (i = (l - 1); i >= 0; i--) {
+        Channel *channelPtr = Ns_IndexEl(&juncPtr->byname, i);
+#endif
+
+	result = TrieWalk(&channelPtr->trie, id, callback, userdata);
+
+	if (result != NS_OK) {
+	    /*
+	     * Callback didn't return NS_OK, so we short circuit and stop.
+	     */
+
+	    return result;
+	}
+    }
+
+    return NS_OK;
 }
 
 

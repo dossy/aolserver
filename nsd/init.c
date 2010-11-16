@@ -106,5 +106,6 @@ Ns_LibInit(void)
     	NsInitSched();
     	NsInitServers();
     	NsInitTcl();
+    	NsInitTclRequests();
     }
 }

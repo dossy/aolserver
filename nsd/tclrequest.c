@@ -68,6 +68,32 @@ static int GetNumArgs(Tcl_Interp *interp, Proc *procPtr);
 /*
  *----------------------------------------------------------------------
  *
+ * NsInitTclRequests --
+ *
+ *	Register Ns_OpProcs at startup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	ProcInfo entries registered.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+NsInitTclRequests(void)
+{
+    Ns_RegisterProcInfo(ProcRequest, "ns:proc", NsProcArgProc);
+    Ns_RegisterProcInfo(AdpRequest, "ns:adp", NULL);
+    Ns_RegisterProcInfo(ProcFilter, "ns:filter", NsProcArgProc);
+    Ns_RegisterProcInfo(Ns_FastPathOp, "ns:fastpath", NULL);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Ns_TclRequest --
  *
  *	Dummy up a direct call to TclProcRequest for a connection.
@@ -707,4 +733,30 @@ FreeProc(void *arg)
 	ns_free(procPtr->args);
     }
     ns_free(procPtr);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NsProcArgProc --
+ *
+ *	Proc info routine to copy registered proc args.
+ *
+ * Results:
+ *	None. 
+ *
+ * Side effects:
+ *	Will copy script to given dstring.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+NsProcArgProc(Tcl_DString *dsPtr, void *arg)
+{
+     Proc *procPtr = arg;
+
+     Tcl_DStringAppendElement(dsPtr, procPtr->name);
+     Tcl_DStringAppendElement(dsPtr, procPtr->args);
 }

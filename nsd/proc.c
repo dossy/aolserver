@@ -64,6 +64,8 @@ struct proc {
 	{(void *) NsTclSockProc, "ns:tclsockcallback", NsTclSockArgProc},
 	{(void *) NsCachePurge, "ns:cachepurge", NsCacheArgProc},
 	{(void *) NsConnThread, "ns:connthread", NsConnArgProc},
+	{(void *) NsAdpProc, "ns:adp", NULL},
+	{(void *) Ns_FastPathOp, "ns:fastpath", NULL},
 	{NULL, NULL, NULL}
 };
 

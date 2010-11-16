@@ -107,6 +107,47 @@ Ns_RegisterFilter(char *server, char *method, char *url,
 
 /*
  *----------------------------------------------------------------------
+ * Ns_RegisterFilter --
+ *
+ *      Register a filter function to handle a method/URL combination.
+ *
+ * Results:
+ *      Returns a pointer to an opaque object that contains the filter
+ *	information.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Ns_FilterList(Tcl_DString *dsPtr, char *server)
+{
+    NsServer *servPtr = NsGetServer(server);
+    Filter *fPtr;
+
+    if (servPtr == NULL) {
+	return;
+    }
+    fPtr = servPtr->filter.firstFilterPtr;
+    while (fPtr != NULL) {
+	char when[8];
+       
+	Tcl_DStringStartSublist(dsPtr);
+	sprintf(when, "%d", fPtr->when);
+	Tcl_DStringAppendElement(dsPtr, when);
+	Tcl_DStringAppendElement(dsPtr, fPtr->method);
+	Tcl_DStringAppendElement(dsPtr, fPtr->url);
+	Ns_GetProcInfo(dsPtr, fPtr->proc, fPtr->arg);
+	Tcl_DStringEndSublist(dsPtr);
+	fPtr = fPtr->nextPtr;
+    }
+}
+
+
+/*
+ *----------------------------------------------------------------------
  * NsRunFilters --
  *
  *      Execute each registered filter function in the Filter list.

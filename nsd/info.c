@@ -499,19 +499,19 @@ NsTclInfoObjCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj **objv)
     Tcl_DString ds;
     static CONST char *opts[] = {
 	"address", "argv0", "boottime", "builddate", "callbacks",
-	"config", "home", "hostname", "label", "locks", "log",
-	"major", "minor", "name", "nsd", "pageroot", "patchlevel",
-	"pid", "platform", "pools", "scheduled", "server", "servers",
-	"sockcallbacks", "tag", "tcllib", "threads", "uptime",
-	"version", "winnt", NULL
+	"config", "filters", "home", "hostname", "label", "locks",
+	"log", "major", "minor", "name", "nsd", "pageroot",
+	"patchlevel", "pid", "platform", "pools", "procs",
+	"scheduled", "server", "servers", "sockcallbacks", "tag",
+	"tcllib", "threads", "uptime", "version", "winnt", NULL
     };
     enum {
 	IAddressIdx, IArgv0Idx, IBoottimeIdx, IBuilddateIdx, ICallbacksIdx,
-	IConfigIdx, IHomeIdx, hostINameIdx, ILabelIdx, ILocksIdx, ILogIdx,
-	IMajorIdx, IMinorIdx, INameIdx, INsdIdx, IPageRootIdx, IPatchLevelIdx,
-	IPidIdx, IPlatformIdx, IPoolsIdx, IScheduledIdx, IServerIdx, IServersIdx,
-	sockICallbacksIdx, ITagIdx, ITclLibIdx, IThreadsIdx, IUptimeIdx,
-	IVersionIdx, IWinntIdx,
+	IConfigIdx, IFiltersIdx, IHomeIdx, hostINameIdx, ILabelIdx, ILocksIdx,
+	ILogIdx, IMajorIdx, IMinorIdx, INameIdx, INsdIdx, IPageRootIdx,
+       	IPatchLevelIdx, IPidIdx, IPlatformIdx, IPoolsIdx, IProcsIdx,
+       	IScheduledIdx, IServerIdx, IServersIdx, sockICallbacksIdx, ITagIdx,
+       	ITclLibIdx, IThreadsIdx, IUptimeIdx, IVersionIdx, IWinntIdx,
     } _nsmayalias opt;
 
     if (objc != 2) {
@@ -571,6 +571,19 @@ NsTclInfoObjCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj **objv)
 	Tcl_GetMemoryInfo(&ds); /* As of Tcl8.4.1 this is not exported. */
 	Tcl_DStringResult(interp, &ds);
 #endif
+	break;
+
+    case IFiltersIdx:
+	if (NsTclGetServer(itPtr, &server) != TCL_OK) {
+            return TCL_ERROR;
+        }
+	Ns_FilterList(&ds, itPtr->servPtr->server);
+	Tcl_DStringResult(interp, &ds);
+	break;
+
+    case IProcsIdx:
+	(void) Ns_WalkRequests(NULL, &ds);
+	Tcl_DStringResult(interp, &ds);
 	break;
 
     case ILogIdx:

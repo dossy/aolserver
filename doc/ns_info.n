@@ -88,6 +88,10 @@ Returns the server boot time in seconds.
 .RS
 Returns the configuration file name.
 .RE
+\fBns_info filters\fR
+.RS
+Returns a list of registered filters added through ns_register_filter or Ns_RegisterFilter().
+.RE
 \fBns_info home\fR 
 .RS
 Returns the directory where the AOLserver was installed.
@@ -119,6 +123,10 @@ Returns the name of the AOLserver. It's usually "AOLserver."
 \fBns_info platform\fR
 .RS
 Returns the name of the platform that the server is running on (e.g., Solaris).
+.RE
+\fBns_info procs\fR
+.RS
+Returns a list of registered procs from maps defined at startup, or added through ns_register_proc or Ns_RegisterRequest().
 .RE
 \fBns_info\fR server 
 .RS

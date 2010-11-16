@@ -50,6 +50,8 @@ typedef struct {
     int		    refcnt;
     Ns_OpProc      *proc;
     Ns_Callback    *delete;
+    char           *method;
+    char           *url;
     void           *arg;
     unsigned int    flags;
 } Req;
@@ -59,6 +61,7 @@ typedef struct {
  */
 
 static void FreeReq(void *arg);
+static int  RequestWalkCallback(const void *data, void *userdata);
 
 /*
  * Static variables defined in this file.
@@ -120,6 +123,8 @@ Ns_RegisterRequest(char *server, char *method, char *url, Ns_OpProc *proc,
     reqPtr = ns_malloc(sizeof(Req));
     reqPtr->proc = proc;
     reqPtr->delete = delete;
+    reqPtr->method = ns_strdup(method);
+    reqPtr->url = ns_strdup(url);
     reqPtr->arg = arg;
     reqPtr->flags = flags;
     reqPtr->refcnt = 1;
@@ -193,6 +198,52 @@ Ns_UnRegisterRequest(char *server, char *method, char *url, int inherit)
     Ns_UrlSpecificDestroy(server, method, url, uid,
     			  inherit ? 0 : NS_OP_NOINHERIT);
     Ns_MutexUnlock(&ulock);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Ns_WalkRequests --
+ *
+ *	Walk the url space of registered procs.
+ *
+ * Results:
+ *	NS_OK, or callback return value if not NS_OK.
+ *
+ * Side effects:
+ *	Depends on callback implementation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Ns_WalkRequests(char *server, Tcl_DString *dsPtr)
+{
+    int result;
+
+    Ns_MutexLock(&ulock);
+    result = Ns_TrieWalk(uid, RequestWalkCallback, dsPtr);
+    Ns_MutexUnlock(&ulock);
+
+    return result;
+}
+
+static int
+RequestWalkCallback(const void *data, void *userdata)
+{
+    Req *reqPtr = data;
+    Tcl_DString *dsPtr = userdata;
+
+    if (reqPtr != NULL) {
+	Tcl_DStringStartSublist(dsPtr);
+	Tcl_DStringAppendElement(dsPtr, reqPtr->method);
+	Tcl_DStringAppendElement(dsPtr, reqPtr->url);
+	Ns_GetProcInfo(dsPtr, reqPtr->proc, reqPtr->arg);
+	Tcl_DStringEndSublist(dsPtr);
+    }
+
+    return NS_OK;
 }
 
 
@@ -481,6 +532,8 @@ FreeReq(void *arg)
     Req *reqPtr = (Req *) arg;
 
     if (--reqPtr->refcnt == 0) {
+	ns_free(reqPtr->method);
+	ns_free(reqPtr->url);
     	if (reqPtr->delete != NULL) {
 	    (*reqPtr->delete) (reqPtr->arg);
         }

@@ -904,6 +904,7 @@ extern void NsInitSched(void);
 extern void NsInitServers(void);
 extern void NsInitTcl(void);
 extern void NsInitTclCache(void);
+extern void NsInitTclRequests(void);
 extern void NsInitUrlSpace(void);
 extern void NsInitRequests(void);
 extern char *NsFindVersion(char *request, unsigned int *majorPtr,
@@ -946,6 +947,8 @@ extern Ns_SockProc NsTclSockProc;
 extern Ns_ArgProc NsTclSockArgProc;
 extern Ns_ThreadProc NsConnThread;
 extern Ns_ArgProc NsConnArgProc;
+extern Ns_ArgProc NsProcArgProc;
+extern Ns_ArgProc NsFilterArgProc;
 
 extern void NsGetCallbacks(Tcl_DString *dsPtr);
 extern void NsGetSockCallbacks(Tcl_DString *dsPtr);

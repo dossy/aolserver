@@ -750,6 +750,7 @@ NS_EXTERN void *Ns_RegisterFilter(char *server, char *method, char *URL,
 NS_EXTERN void *Ns_RegisterServerTrace(char *server, Ns_TraceProc *proc, void *arg);
 NS_EXTERN void *Ns_RegisterConnCleanup(char *server, Ns_TraceProc *proc, void *arg);
 NS_EXTERN void *Ns_RegisterCleanup(Ns_TraceProc *proc, void *arg);
+NS_EXTERN void Ns_FilterList(Tcl_DString *dsPtr, char *server);
 
 /*
  * htuu.c
@@ -964,6 +965,7 @@ NS_EXTERN void Ns_GetRequest(char *server, char *method, char *url,
 			  int *flagsPtr);
 NS_EXTERN void Ns_UnRegisterRequest(char *server, char *method, char *url,
 				 int inherit);
+NS_EXTERN int Ns_WalkRequests(char *server, Tcl_DString *dsPtr);
 NS_EXTERN int Ns_ConnRunRequest(Ns_Conn *conn);
 NS_EXTERN int Ns_ConnRedirect(Ns_Conn *conn, char *url);
 
@@ -1294,6 +1296,7 @@ NS_EXTERN void Ns_ServerSpecificSet(char *handle, int id, void *data, int flags,
 				 void (*deletefunc) (void *));
 NS_EXTERN void *Ns_ServerSpecificGet(char *handle, int id);
 NS_EXTERN void *Ns_ServerSpecificDestroy(char *handle, int id, int flags);
+NS_EXTERN int Ns_TrieWalk(int id, int (*callback) (const void *, void *), void *userdata);
 
 /*
  * fd.c:
