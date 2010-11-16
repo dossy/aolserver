@@ -64,7 +64,21 @@ void *
 void
 \fBNs_UrlSpecificSet\fR(\fIchar *server, char *method, char *url, 
     int id, void *data, int flags, void (*deletefunc) (void *)\fR)
+.sp
+int
+\fBNs_TrieWalk\fR(\fIid, callback, userdata\fR)
 .BE
+
+.SH ARGUMENTS
+.AS void *userdata
+.AP int id in
+Handle from Ns_UrlSpecificAlloc.
+
+.AP int (*callback) in
+The callback function to invoke on every node in the trie.
+
+.AP void *userdata in/out
+A pointer that is passed in to the callback along with the node data.
 
 .SH DESCRIPTION
 .PP
@@ -172,6 +186,13 @@ Normally, calling Ns_UrlSpecificSet on a handle/url/method/id combination which
 already has an operation registered for it causes the previous operation's delete
 procedure to be called. You can override this behavior by adding the
 NS_OP_NODELETE flag.
+
+.TP
+\fBNs_TrieWalk\fR traverses a trie, invoking a callback function on each node passing in the node data and a user data pointer.  If the callback returns something other than NS_OK, the walk terminates immediately.  The callback should have the following signature:
+
+.CS
+int (*callback)(const void *data, void *userdata)
+.CE
 
 .SH "SEE ALSO"
 nsd(1), info(n)
