@@ -1,0 +1,10 @@
+*.o
+*.a
+*.so
+*.dylib
+config.log
+config.status
+include/ns.mak
+nsd/nsd
+nstclsh/nstclsh
+nsthread/nsthreadtest
