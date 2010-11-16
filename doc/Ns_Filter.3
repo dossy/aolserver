@@ -37,13 +37,16 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-Ns_RegisterFilter \- manage callbacks during a connection
+Ns_RegisterFilter, Ns_FilterList \- manage callbacks during a connection
 .SH SYNOPSIS
 .nf
 \fB#include "ns.h"\fR
 .sp
 void
 \fBNs_RegisterFilter\fR(\fIchar *server, char *method, char *url, Ns_FilterProc *proc, int when, void *arg\fR)
+.sp
+void
+\fBNs_FilterList\fR(\fITcl_DString *dsPtr, char *server\fR)
 
 .SH ARGUMENTS
 .AS Ns_FilterProc *proc
@@ -70,8 +73,11 @@ Arbitrary one-word value to pass to \fIproc\fR.
 Procedure to invoke when the connection reaches a requested
 state.
 
-.BE
+.AP Tcl_DString *dsPtr in
+DString that contains the enumerated list of registered filters
+for the specified server.
 
+.BE
 
 .SH DESCRIPTION
 .PP
@@ -156,9 +162,14 @@ aborted.
 .TP
 NS_FILTER_TRACE
 
+.PP
+\fBNs_FilterList\fR walks the list of registered filters and builds up
+a Tcl list of each in the following format:
+.TP
+when, method, url, proc, arg
 
 .SH "SEE ALSO"
-Ns_RegisterConnCleanup(3), ns_register_filter(n), Ns_RegisterServerTrace(3)
+ns_info(n), Ns_RegisterConnCleanup(3), ns_register_filter(n), Ns_RegisterServerTrace(3)
 
 .SH KEYWORDS
 
