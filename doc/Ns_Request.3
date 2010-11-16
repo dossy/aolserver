@@ -37,7 +37,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-Ns_FreeRequest, Ns_ParseHeader, Ns_ParseRequest, Ns_QueryToSet, Ns_SetRequestUrl \- library procedures
+Ns_FreeRequest, Ns_ParseHeader, Ns_ParseRequest, Ns_QueryToSet, Ns_SetRequestUrl, Ns_WalkRequests \- library procedures
 .SH SYNOPSIS
 .nf
 \fB#include "ns.h"\fR
@@ -51,14 +51,32 @@ Ns_FreeRequest, Ns_ParseHeader, Ns_ParseRequest, Ns_QueryToSet, Ns_SetRequestUrl
 \fBNs_QueryToSet\fR(\fIarg, arg\fR)
 .sp
 \fBNs_SetRequestUrl\fR(\fIarg, arg\fR)
+.sp
+int
+\fBNs_WalkRequests\fR(\fIserver, dsPtr\fR)
 .BE
+
+.SH ARGUMENTS
+.AS Tcl_DString *dsPtr
+.AP char *server in
+Name of virtual server.
+
+.AP Tcl_DString *dsPtr in/out
+DString that contains the enumerated list of registered procs
+for the specified server.
 
 .SH DESCRIPTION
 .PP
 These functions ...
 
+.PP
+\fBNs_WalkRequests\fR walks the list of registered procs and builds up
+a Tcl list of each in the following format:
+.TP
+method, url, proc, arg
+
 .SH "SEE ALSO"
-nsd(1), info(n)
+ns_info(n), ns_register_proc(n)
 
 .SH KEYWORDS
 
